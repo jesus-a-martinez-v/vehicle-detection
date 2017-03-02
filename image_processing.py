@@ -242,25 +242,3 @@ def process_image(img, scales, classifier, scaler, parameters, x_start=None, x_s
 
     return draw_image
 
-
-if __name__ == '__main__':
-    image = cv2.imread('./test_images/test6.jpg')
-    image_name = "test6"
-    print(image.shape)
-    cv2.waitKey(5000)
-    new_img, boxes, hm, lhm = process_image(img=image, x_start=600,
-                                            y_start=400,
-                                            y_stop=656,
-                                            scales=(0.75, 1.5, 2, 2.25),
-                                            classifier=__db['model'],
-                                            scaler=__db['scaler'],
-                                            parameters=__db['parameters'],
-                                            heatmap_threshold=4)
-    cv2.imwrite('./output_images/pipeline/test_6_bboxes.jpg', new_img)
-    cv2.waitKey(5000)
-    cv2.imwrite('./output_images/pipeline/test_6_raw_boxes.jpg', boxes)
-    cv2.waitKey(5000)
-    cv2.imwrite('./output_images/pipeline/test_6_heatmap.jpg', hm)
-    cv2.waitKey(5000)
-    cv2.imshow('lhm', lhm)
-    cv2.waitKey(5000)
