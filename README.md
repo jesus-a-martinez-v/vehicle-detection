@@ -45,7 +45,7 @@ cell_per_block: 2
 color_space: YcrCb
 ```
 
-One of the important takeaways of this process is that the lightning variability was an issue to take into account. That's why explored color spaces that usually deal well with variable lightning conditions, such as HSV and YCrCb. Also, we applied Gamma normalization over the images to diminish a bit more the effects of shadows and other illumination variations.
+One of the important takeaways of this process is that the lightning variability was an issue to take into account. That's why we explored color spaces that usually deal well with variable lightning conditions, such as HSV and YCrCb. Also, we applied Gamma normalization over the images to diminish a bit more the effects of shadows and other illumination variations.
 
 Here's the function we used to compute HOG features:
 
@@ -99,7 +99,7 @@ Here's the HOG visualization:
 ##### NOTE: Parameters
 
 > We stored all the parameters used throughout the pipeline, the data, the classifier and the scaler in a pickled file called `db.p`, which as its name suggests, acted as our local
-> database, reducing the number of parameters passed to each function. The code used to prepare the data as well as the parameter is in `data.py`. To download the exact `db.p` we used, click [here](https://drive.google.com/file/d/0B1SO9hJRt-hgWEN4bHMxaDhDZlU/view?usp=sharing)
+> database, reducing the number of parameters passed to each function. The code used to prepare the data as well as the parameters is in `data.py`. To download the exact `db.p` we used, click [here](https://drive.google.com/file/d/0B1SO9hJRt-hgWEN4bHMxaDhDZlU/view?usp=sharing) to get a zipped version of it.
 
 
 #### II. _"Describe how (and identify where in your code) you trained a classifier using your selected HOG features (and color features if you used them)."_
@@ -133,7 +133,7 @@ The features and the values used to extract them are:
 }
 ```
 
-This selection is the result of many trial and error iterations. The main trade-off was accuracy versus training/prediction time. So, that's we kept the HOG features only, because the spatial and color features didn't improve much the accuracy of our model, but they greatly increased the image processing time.
+This selection is the result of many trial and error iterations. The main trade-off was accuracy versus training/prediction time. So, that's why we kept the HOG features only, because the spatial and color features didn't improve much the accuracy of our model, but they greatly increased the image processing time.
 
 To prepare the data we used the following function:
 ```
@@ -196,7 +196,7 @@ def prepare_data(save_scaler=True, location='./db.p'):
 And to train the model, we used this:
 
 ```
-def train_model(features, labels, test_proportion=0.25, seed=9991, save_model=True, location='./db.p'):
+def train_model(features, labels, test_proportion=0.20, seed=9991, save_model=True, location='./db.p'):
     """
     Takes a set of features and labels and trains a classifier on the car/non car dataset.
     :param save_model: Flag that indicates if we should persist our fit model in database (i.e. the pickle file).
@@ -248,14 +248,14 @@ def train_model(features, labels, test_proportion=0.25, seed=9991, save_model=Tr
 
 As we can see above, the first time we used a [`GridSearchClassifier`](http://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html) to select the model parameters that provide the best performance. Once we find these parameters, we store them so we don't have to repeat the search all over again if we want to re-train the model.
 
-Finally, we obtained an accuracy of 98.7% on the test set.
+Finally, we obtained an accuracy of 98.7% on the test set (which is the 20% of the training set).
 
 ## Sliding Window Search
 
 #### I. _"Describe how (and identify where in your code) you implemented a sliding window search. How did you decide what scales to search and how much to overlap windows?"_
 
 To improve the performance of the pipeline, instead of applying HOG over each window, we applied it once over the entire region of interest, and then subsampled that HOG featurized region at different scales. The scales selection was also a 
-result of trial and error. Our rationale was to keep enough scales to detect farther and nearer cars, but no too much to bloat our pipeline with more windows that wouldn't improve its performance.
+result of trial and error. Our rationale was to keep enough scales to detect farther and nearer cars, but not too much to bloat our pipeline with more windows that wouldn't improve its performance.
 We settled with the following scales: `(0.75, 1.5, 2, 2.25)`
 
 Also, we focused only on the right region of the frames (this is where the cars are in the test video). The function that performs the window search is:
@@ -414,6 +414,7 @@ def process_image(img, scales, classifier, scaler, parameters, x_start=None, x_s
 ```
 
 This technique was extracted from [this amazing Q&A session held by Udacity](https://www.youtube.com/watch?v=P2zwrTM8ueA&feature=youtu.be).
+
 #### II. _"Show some examples of test images to demonstrate how your pipeline is working. How did you optimize the performance of your classifier?"_
 
 Here's an example of the windows found by the `find_cars()` function:
@@ -426,9 +427,9 @@ And here's the final image after merging the rectangles together:
 ![alt-tag](https://github.com/jesus-a-martinez-v/vehicle-detection/blob/master/output_images/pipeline/test_6_bboxes.jpg)
 
 As we explained above, we decided to focus solely on the HOG features given that other spatial and color features didn't really improve that much the accuracy of the classifier, but impacted
-heavily its performance. To deal with false positives, we first reduced the search area to a region where the car in the test video are most likely to appear (the right half below the horizon).
-Then, to diminish the impact false detections we kept heatmaps of each processed frame and then thresholded the last 5 frames' heatmaps. This thresholding techique allowed us to get rid of detections in "cold" areas in the resulting average 
- heatmap due to most likely being false positives.
+heavily its performance. To deal with false positives, we first norrowed the search area to a region where the cars in the test video are most likely to appear (the right half below the horizon).
+Then, to diminish the impact of false detections we kept heat maps of each processed frame and then thresholded the last 5 frames' heatmaps. This thresholding techique allowed us to get rid of detections in "cold" areas in the resulting average 
+ heat map due to most likely being false positives.
  
 
 ## Video Implementation
@@ -439,7 +440,7 @@ You can watch the result of processing a footage from a camera mounted on a car 
 
 #### II. _"Describe how (and identify where in your code) you implemented some kind of filter for false positives and some method for combining overlapping bounding boxes."_
 
-To filter out false positives we kept a heatmap of the detections of each frame. This heatmap technique basically consist of taking a canvas (an image where all its pixels are set o zero) and adding "heat" (just increasing by one) those pixels within bounding boxes. So, more robust detections would have a lot of heat, while false positives should be "colder". To decrease the chance of keeping false positives, we averaged the heatmaps of the last 5 frames, and then applied a threshold of 5, which translates in pixels with heat below that threshold being zeroed out.
+To filter out false positives we kept a heat map of the detections in each frame. This heat map technique basically consist of taking a canvas (an image where all its pixels are set to zero) and adding "heat" (just increasing by one) those pixels within bounding boxes. So, more robust detections would have a lot of heat, while false positives should be "colder". To decrease the chance of keeping false positives, we averaged the heatmaps of the last 5 frames, and then applied a threshold of 5, which translates in pixels with heat below that threshold being zeroed out.
 
 Here's the function used to add heat to a given heatmap:
 
@@ -497,12 +498,10 @@ def get_labeled_cars(heatmap):
 
 One of the disadvantages of the current pipeline is that it isn't very customizable. 
 For instance, the look up area is skewed to the right because there's where the cars are in the test video, so a car
-in another location would not be properly identified. Also, the pipeline isn't very robust against changing lighting 
-conditions (it tends to throw some false positives).
+in another location would not be properly identified. Also, the pipeline has a hard time identifying bright colored objects (such as the white car). It may be necessary to add more features related to color and pixels distribution. 
  
-During training, our classifier reached a 98.7% accuracy on the test set, which is highly suspicious. In fact, it might 
-be a sign of overfitting, specially if we take into account that there are some false positives in the resulting video. 
-More training with a bigger or extended dataset is a must to improve the overall performance of the pipeline.
+Even when our classifier reached a 98.7% accuracy on the test set, it outputs more false positives than desired.
+More training with a bigger or extended dataset is a must to improve the overall performance of the pipeline. Also, as stated in the previous paragraph, further exploration of color features (other color spaces, for instance) should improve the results.
 
 Although computer vision provides a really powerful set of tools, I find the fine-tuning process very exhausting and 
 I am not so sure if this could scale well to a production environment, whereas a neural network, at least to me, has 
