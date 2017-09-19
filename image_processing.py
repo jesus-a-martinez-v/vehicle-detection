@@ -54,7 +54,7 @@ def find_cars(img, scales, classifier, scaler, parameters, x_start, x_stop, y_st
         # 64 was the original sampling rate, with 8 cells and 8 pix per cell
         window = 64
         number_of_blocks_per_window = (window // parameters['pix_per_cell']) - 1
-        cells_per_step = 1  # Instead of overlap, define how many cells to step
+        cells_per_step = 2  # Instead of overlap, define how many cells to step
         number_of_steps_in_x = (number_of_blocks_in_x - number_of_blocks_per_window) // cells_per_step
         number_of_steps_in_y = (number_of_blocks_in_y - number_of_blocks_per_window) // cells_per_step
 
